@@ -9,7 +9,7 @@ The frontend must never contain secrets. The app also needs visible version and 
 
 ## Decision
 
-Use build-time public constants for version and fallback commit. Fetch the public GitHub main commit from the GitHub API when available. No secret configuration is required.
+Use build-time public constants for version and a stable fallback commit label. Fetch the public GitHub main commit from the GitHub API when available. No secret configuration is required.
 
 ## Consequences
 

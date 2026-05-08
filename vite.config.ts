@@ -1,18 +1,9 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { execSync } from "node:child_process";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const repoBase = "/civic-asset-audit-walker/";
-
-function gitCommit(): string {
-  try {
-    return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
-  } catch {
-    return "local";
-  }
-}
 
 export default defineConfig({
   base: repoBase,
@@ -65,7 +56,7 @@ export default defineConfig({
   ],
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? "0.1.0"),
-    __GIT_COMMIT__: JSON.stringify(process.env.VITE_GIT_COMMIT ?? gitCommit())
+    __GIT_COMMIT__: JSON.stringify(process.env.VITE_GIT_COMMIT ?? "runtime")
   },
   build: {
     outDir: "docs",

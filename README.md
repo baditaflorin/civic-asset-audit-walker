@@ -62,6 +62,8 @@ Deploy guide: docs/deploy.md
 
 Privacy: docs/privacy.md
 
+Postmortem: docs/postmortem.md
+
 ## Commands
 
 ```bash

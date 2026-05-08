@@ -18,4 +18,3 @@ There is no centralized usage dashboard and no PII collection. Public interest i
 ## Alternatives Considered
 
 Plausible and Cloudflare Worker beacons were considered but rejected for v1.
-

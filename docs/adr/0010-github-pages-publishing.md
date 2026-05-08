@@ -18,4 +18,3 @@ The built frontend is committed. `.gitignore` excludes `dist/` but not `docs/`. 
 ## Alternatives Considered
 
 A `gh-pages` branch was rejected because it splits source and published artifacts. Publishing from repository root was rejected because source files would be publicly served as site files.
-

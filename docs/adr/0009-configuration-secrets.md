@@ -18,4 +18,3 @@ Use build-time public constants for version and fallback commit. Fetch the publi
 ## Alternatives Considered
 
 Runtime configuration endpoints were rejected because Mode A has no backend.
-

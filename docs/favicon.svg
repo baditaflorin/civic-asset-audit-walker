@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Civic Asset Audit Walker">
+  <rect width="64" height="64" rx="14" fill="#006b57"/>
+  <path d="M18 13h28a5 5 0 0 1 5 5v28a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V18a5 5 0 0 1 5-5Z" fill="#f7f3ea"/>
+  <path d="M23 23h7v7h-7zm11 0h7v7h-7zM23 34h7v7h-7zm11 0h7v7h-7z" fill="#111827"/>
+  <path d="M43 45 32 55 21 45" fill="none" stroke="#d85c27" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+

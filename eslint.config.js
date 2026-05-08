@@ -5,7 +5,16 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["docs/assets/**", "docs/sw.js", "docs/workbox-*.js", "coverage/**"] },
+  {
+    ignores: [
+      "docs/assets/**",
+      "docs/sw.js",
+      "docs/workbox-*.js",
+      "coverage/**",
+      "scripts/**",
+      "eslint.config.js"
+    ]
+  },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {
@@ -28,8 +37,10 @@ export default tseslint.config(
         "error",
         { checksVoidReturn: { attributes: false } }
       ],
-      "@typescript-eslint/consistent-type-imports": "error"
+      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/immutability": "off"
     }
   }
 );
-

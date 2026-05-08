@@ -18,4 +18,3 @@ The app remains familiar to contributors, builds quickly, and can split OpenCV.j
 ## Alternatives Considered
 
 Svelte and vanilla TypeScript were considered. React was chosen because the ecosystem around maps, query caching, PWA tooling, and testing is mature.
-

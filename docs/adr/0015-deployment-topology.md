@@ -18,4 +18,3 @@ There is no `deploy/` directory, nginx config, Docker image, Prometheus endpoint
 ## Alternatives Considered
 
 A backend topology was rejected as unnecessary for v1.
-

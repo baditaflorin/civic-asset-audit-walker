@@ -11,7 +11,7 @@ The product idea names OpenCV, DuckDB, libosmscout, and libpostal. GitHub Pages 
 
 Lazy-load browser-appropriate heavy modules:
 
-- OpenCV.js via `@techstark/opencv-js` for scanner preprocessing when the scan panel is used.
+- OpenCV.js from jsDelivr's `@techstark/opencv-js` package for scanner preprocessing when the scan panel is used.
 - DuckDB-WASM via `@duckdb/duckdb-wasm` for local aggregation when the analytics panel is used.
 - AprilTag generation via `apriltag` for printable test stickers and guided scan matching.
 
@@ -24,4 +24,3 @@ The initial app shell stays small and usable. Advanced modules load behind user 
 ## Alternatives Considered
 
 Bundling native libosmscout/libpostal WASM was rejected for v1 due size, build complexity, and GitHub Pages header constraints.
-

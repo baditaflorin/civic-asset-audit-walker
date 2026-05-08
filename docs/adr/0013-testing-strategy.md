@@ -18,4 +18,3 @@ Hooks run the same checks locally before pushes. Browser-only APIs are isolated 
 ## Alternatives Considered
 
 Remote CI was rejected by project constraint.
-

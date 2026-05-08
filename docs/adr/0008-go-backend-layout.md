@@ -18,4 +18,3 @@ The repository stays focused on the static frontend. If Mode B data generation i
 ## Alternatives Considered
 
 Creating empty Go folders was rejected as misleading scaffolding.
-

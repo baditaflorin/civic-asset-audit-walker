@@ -44,6 +44,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        sourcemap: false,
         navigateFallback: `${repoBase}index.html`,
         globPatterns: ["**/*.{js,css,html,svg,json,webmanifest,wasm}"],
         runtimeCaching: [
@@ -70,13 +71,20 @@ export default defineConfig({
     outDir: "docs",
     emptyOutDir: false,
     assetsDir: "assets",
-    sourcemap: true,
+    sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ["react", "react-dom", "@tanstack/react-query"],
-          map: ["leaflet"],
-          duckdb: ["@duckdb/duckdb-wasm"]
+        manualChunks(id) {
+          if (id.includes("node_modules/react") || id.includes("node_modules/@tanstack")) {
+            return "react";
+          }
+          if (id.includes("node_modules/leaflet")) {
+            return "map";
+          }
+          if (id.includes("node_modules/@duckdb")) {
+            return "duckdb";
+          }
+          return undefined;
         }
       }
     }
@@ -88,4 +96,3 @@ export default defineConfig({
     port: 4173
   }
 });
-

@@ -28,4 +28,3 @@ The contract works over JSON export, CSV export, WebRTC messages, and DuckDB agg
 ## Alternatives Considered
 
 Parquet and SQLite artifacts were rejected for v1 because there is no build-time data pipeline yet.
-

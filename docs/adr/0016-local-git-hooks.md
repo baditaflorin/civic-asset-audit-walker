@@ -18,4 +18,3 @@ Contributors must install hooks locally. The Makefile exposes each hook target f
 ## Alternatives Considered
 
 Lefthook was considered, but plain hooks reduce one dependency and are transparent.
-

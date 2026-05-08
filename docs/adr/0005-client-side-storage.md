@@ -18,4 +18,3 @@ IndexedDB gives durable browser storage and can hold more reports than localStor
 ## Alternatives Considered
 
 OPFS was considered for larger binary assets, but v1 does not store photos or local map extracts.
-

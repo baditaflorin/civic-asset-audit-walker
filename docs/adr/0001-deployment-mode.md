@@ -23,4 +23,3 @@ Use Mode A: Pure GitHub Pages. The app is a static React/Vite PWA served from `m
 
 - Mode B: useful later for prebuilt OSM extracts or address normalization artifacts, but not required for v1.
 - Mode C: rejected because auth, central writes, and server secrets are non-goals for v1.
-

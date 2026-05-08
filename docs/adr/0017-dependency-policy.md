@@ -18,4 +18,3 @@ Dependency updates should be reviewed deliberately. `npm audit` and smoke tests 
 ## Alternatives Considered
 
 Hand-rolled storage, maps, and SQL-like aggregation were rejected.
-

@@ -25,4 +25,3 @@ Each feature can be tested independently and lazy-load expensive modules. Shared
 ## Alternatives Considered
 
 A page-first layout was rejected because scanner, sync, and reporting logic need reuse across multiple panels.
-

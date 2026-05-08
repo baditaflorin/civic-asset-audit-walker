@@ -18,4 +18,3 @@ Scanner, WebRTC, DuckDB, and geolocation errors degrade to manual input, export/
 ## Alternatives Considered
 
 Global catch-and-log behavior was rejected because it hides the action the user should take next.
-

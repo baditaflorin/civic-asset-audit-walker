@@ -6,6 +6,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    include: ["src/**/*.test.ts", "test/**/*.test.ts"],
+    exclude: ["tests/e2e/**", "node_modules/**", "docs/**"],
     setupFiles: ["tests/setup.ts"],
     coverage: {
       reporter: ["text", "lcov"],
@@ -18,4 +20,3 @@ export default defineConfig({
     }
   }
 });
-

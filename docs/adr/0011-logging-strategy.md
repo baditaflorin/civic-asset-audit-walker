@@ -18,4 +18,3 @@ Users see actionable errors in the app. There is no remote log collection.
 ## Alternatives Considered
 
 Client log beacons were rejected because analytics and telemetry are non-goals for v1.
-

@@ -6,4 +6,3 @@ export default mergeConfig(baseConfig, {
     include: ["test/integration/**/*.test.ts"]
   }
 });
-

@@ -18,4 +18,3 @@ All reports originate from local volunteers or peer imports. A later Mode B ADR 
 ## Alternatives Considered
 
 A starter pipeline was rejected because it would imply freshness and source guarantees the v1 app does not need.
-

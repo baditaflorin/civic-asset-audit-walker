@@ -1,0 +1,42 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs and temp
+*.log
+tmp/
+.cache/
+
+# Node
+node_modules/
+coverage/
+dist/
+.vite/
+playwright-report/
+test-results/
+
+# Go
+bin/
+*.test
+*.out
+vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+

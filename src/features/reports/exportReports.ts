@@ -1,4 +1,5 @@
 import { auditReportSchema, type AuditReport } from "../../lib/schema";
+import { canonicalImportExport } from "../importer/importEngine";
 
 export function parseReportImport(text: string): AuditReport[] {
   const parsed: unknown = JSON.parse(text);
@@ -12,15 +13,7 @@ export function parseReportImport(text: string): AuditReport[] {
 }
 
 export function reportsToJson(reports: AuditReport[]): string {
-  return JSON.stringify(
-    {
-      type: "caw.export.v1",
-      exportedAt: new Date().toISOString(),
-      reports
-    },
-    null,
-    2
-  );
+  return canonicalImportExport(reports);
 }
 
 export function reportsToCsv(reports: AuditReport[]): string {
@@ -35,22 +28,32 @@ export function reportsToCsv(reports: AuditReport[]): string {
     "notes",
     "createdAt",
     "updatedAt",
-    "source"
+    "source",
+    "confidence",
+    "sourceType",
+    "sourceId",
+    "warnings"
   ];
 
-  const rows = reports.map((report) => [
-    report.id,
-    report.assetTag,
-    report.assetKind,
-    report.condition,
-    report.location?.lat ?? "",
-    report.location?.lng ?? "",
-    report.location?.accuracy ?? "",
-    report.notes,
-    report.createdAt,
-    report.updatedAt,
-    report.source
-  ]);
+  const rows = [...reports]
+    .sort((a, b) => a.assetTag.localeCompare(b.assetTag) || a.id.localeCompare(b.id))
+    .map((report) => [
+      report.id,
+      report.assetTag,
+      report.assetKind,
+      report.condition,
+      report.location?.lat ?? "",
+      report.location?.lng ?? "",
+      report.location?.accuracy ?? "",
+      report.notes,
+      report.createdAt,
+      report.updatedAt,
+      report.source,
+      report.confidence?.overall ?? "",
+      report.provenance?.sourceType ?? "",
+      report.provenance?.sourceId ?? "",
+      report.provenance?.warnings.join("; ") ?? ""
+    ]);
 
   return [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
 }
@@ -66,9 +69,13 @@ export function downloadText(filename: string, contents: string, type: string): 
 }
 
 function csvCell(value: string | number): string {
-  const text = String(value);
+  const text = neutralizeSpreadsheetFormula(String(value));
   if (!/[",\n]/.test(text)) {
     return text;
   }
   return `"${text.replaceAll('"', '""')}"`;
+}
+
+function neutralizeSpreadsheetFormula(value: string): string {
+  return /^[=+\-@]/.test(value.trim()) ? `'${value}` : value;
 }

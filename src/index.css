@@ -435,6 +435,27 @@ a {
   margin-top: 10px;
 }
 
+.import-progress,
+.import-summary {
+  margin: 10px 0 0;
+  padding: 9px;
+  border: 1px solid #d8e4dd;
+  border-radius: 8px;
+  background: #f2faf5;
+  color: #2f4f42;
+  font-size: 0.86rem;
+}
+
+.import-summary {
+  display: grid;
+  gap: 5px;
+}
+
+.import-summary p {
+  margin: 0;
+  color: #4f5b55;
+}
+
 .aggregate-row,
 .report-row {
   display: grid;

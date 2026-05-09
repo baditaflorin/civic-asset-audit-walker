@@ -5,16 +5,16 @@ test("imports sample data, persists across reload, and restores from a share lin
   browser,
   page
 }) => {
-  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], {
-    origin: "http://127.0.0.1:4173"
-  });
   await page.goto("/");
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], {
+    origin: new URL(page.url()).origin
+  });
 
   await expect(page.getByRole("heading", { name: "Civic Asset Audit Walker" })).toBeVisible();
   await expect(
     page.getByLabel("Project links", { exact: true }).getByRole("link", { name: "GitHub" })
   ).toHaveAttribute("href", "https://github.com/baditaflorin/civic-asset-audit-walker");
-  await expect(page.getByText(/v0\.2\.1/)).toBeVisible();
+  await expect(page.getByText(/v0\.3\.0/)).toBeVisible();
   await expect(page.getByText(/commit [a-f0-9]{7}/)).toBeVisible();
 
   await page.getByRole("button", { name: "Load sample" }).click();

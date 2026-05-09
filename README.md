@@ -24,13 +24,14 @@ make test
 make smoke
 ```
 
-## What Works in v0.1.0
+## What Works in v0.3.0
 
-- Guided AprilTag 36h11 sticker generation and centered camera scan flow.
-- Offline report creation with IndexedDB persistence.
+- Guided AprilTag 36h11 sticker generation, centered camera scan flow, and printable tag sheet.
+- Offline report creation with IndexedDB persistence plus durable draft and settings state.
 - Leaflet/OpenStreetMap report map with repository and PayPal links visible from the map.
-- JSON and CSV export/import for volunteer-controlled backups.
-- Manual WebRTC offer/answer sync for anonymous peer report exchange.
+- Multi-path import for files, drag-drop, pasted text, clipboard text, public URLs, and a built-in sample dataset.
+- JSON and CSV report export plus full workspace backup/restore and share links.
+- Manual WebRTC offer/answer sync for anonymous peer report exchange, with in-app step guidance.
 - DuckDB-WASM aggregate query behind a user action, with TypeScript fallback.
 - PWA shell, service worker, and GitHub Pages build output in `docs/`.
 
@@ -41,17 +42,17 @@ C4Context
   title Civic Asset Audit Walker - Mode A
   Person(volunteer, "Volunteer", "Walks a neighborhood and audits tagged assets")
   System_Boundary(pages, "GitHub Pages static site") {
-    System(app, "React PWA", "Camera scan, reports, map, exports, WebRTC sync")
+    System(app, "React PWA", "Camera scan, reports, workspace restore, map, sync, exports")
     SystemDb(indexeddb, "IndexedDB", "Local reports")
+    SystemDb(localstate, "localStorage", "Draft, settings, activity history")
     System_Ext(wasm, "Lazy browser modules", "OpenCV.js CDN, DuckDB-WASM CDN/local package")
   }
   System_Ext(osm, "OpenStreetMap tiles", "Public raster tiles")
-  System_Ext(github, "GitHub public API", "Current commit metadata")
   Rel(volunteer, app, "Uses in browser")
   Rel(app, indexeddb, "Stores reports")
+  Rel(app, localstate, "Stores workspace state")
   Rel(app, wasm, "Loads on demand")
   Rel(app, osm, "Fetches map tiles")
-  Rel(app, github, "Fetches public commit")
 ```
 
 Detailed architecture: docs/architecture.md
@@ -66,6 +67,8 @@ Postmortem: docs/postmortem.md
 
 Phase 2 Substance postmortem: docs/postmortem-phase2-substance.md
 
+Phase 3 Completeness postmortem: docs/postmortem-phase3.md
+
 ## Commands
 
 ```bash
@@ -77,7 +80,7 @@ make test
 make smoke
 make lint
 make fmt
-make release VERSION=v0.1.0
+make release VERSION=v0.3.0
 ```
 
 ## Deployment
@@ -89,3 +92,9 @@ Public URL: https://baditaflorin.github.io/civic-asset-audit-walker/
 ## Security
 
 No runtime secrets are required. Real `.env*` files are ignored. Local hooks run `gitleaks protect --staged`.
+
+## Limitations
+
+- URL import only works when the remote source allows browser cross-origin fetches. If not, use file upload or paste rendered text.
+- WebRTC sync remains manual. The app now explains the order of operations, but it does not use a signaling server.
+- Share links are practical for small workspaces. Larger workspaces should use the full workspace backup file instead.

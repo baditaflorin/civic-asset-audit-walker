@@ -1,7 +1,7 @@
 {
   "type": "caw.workspace.v1",
   "schemaVersion": 1,
-  "appVersion": "0.2.1",
+  "appVersion": "0.3.0",
   "createdAt": "2026-05-09T10:30:00.000Z",
   "settings": {
     "defaultAssetKind": "bench",

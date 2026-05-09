@@ -1,6 +1,6 @@
 {
   "name": "civic-asset-audit-walker",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Offline-first web app for volunteers to scan tagged civic assets, report conditions, and share anonymous audits.",
   "type": "module",

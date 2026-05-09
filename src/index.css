@@ -456,6 +456,64 @@ a {
   color: #4f5b55;
 }
 
+.drop-zone {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dashed #b8c6bd;
+  border-radius: 8px;
+  background: #f8fbf9;
+  color: #41514a;
+}
+
+.drop-zone.active {
+  border-color: #006b57;
+  background: #e8f5ef;
+}
+
+.drop-zone strong {
+  font-size: 0.92rem;
+}
+
+.drop-zone span {
+  font-size: 0.82rem;
+}
+
+.workspace-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.workspace-settings-grid {
+  margin: 0;
+}
+
+.settings-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #41514a;
+  font-size: 0.9rem;
+}
+
+.checkbox-row input {
+  margin-top: 3px;
+}
+
+.workspace-actions {
+  align-items: stretch;
+}
+
+.workspace-history-heading {
+  margin-bottom: 0;
+}
+
 .aggregate-row,
 .report-row {
   display: grid;
@@ -614,6 +672,10 @@ a {
   .primary-button {
     flex: 1 1 auto;
   }
+
+  .checkbox-row {
+    align-items: center;
+  }
 }
 
 @media print {
@@ -627,9 +689,10 @@ a {
   .report-form,
   .analytics-panel,
   .sync-panel,
-  .report-list,
+  .workspace-panel,
   .toast,
   .toolbar,
+  .drop-zone,
   .site-footer {
     display: none !important;
   }
@@ -637,6 +700,16 @@ a {
   .scanner-panel {
     box-shadow: none;
     border: 0;
+  }
+
+  .report-list {
+    display: block !important;
+    box-shadow: none;
+    border: 0;
+  }
+
+  .report-row {
+    break-inside: avoid;
   }
 
   .tag-preview {

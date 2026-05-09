@@ -24,6 +24,7 @@ export default function WebRtcSync({ reports, onImport, onMessage }: WebRtcSyncP
   const [localSignal, setLocalSignal] = useState("");
   const [remoteSignal, setRemoteSignal] = useState("");
   const [status, setStatus] = useState("Idle");
+  const canSend = status === "Connected" || status.startsWith("Sent ");
 
   const handlers = {
     onOpen: () => {
@@ -52,18 +53,22 @@ export default function WebRtcSync({ reports, onImport, onMessage }: WebRtcSyncP
   }
 
   async function acceptOffer() {
-    closePeer();
-    const offer = decodeSignal(remoteSignal);
-    const peer = createPeerConnection(handlers);
-    peer.ondatachannel = (event) => {
-      channelRef.current = wireChannel(event.channel, handlers);
-    };
-    peerRef.current = peer;
-    await peer.setRemoteDescription(offer);
-    await peer.setLocalDescription(await peer.createAnswer());
-    await waitForIceGathering(peer);
-    setLocalSignal(encodeSignal(peer.localDescription!));
-    setStatus("Answer ready");
+    try {
+      closePeer();
+      const offer = decodeSignal(remoteSignal);
+      const peer = createPeerConnection(handlers);
+      peer.ondatachannel = (event) => {
+        channelRef.current = wireChannel(event.channel, handlers);
+      };
+      peerRef.current = peer;
+      await peer.setRemoteDescription(offer);
+      await peer.setLocalDescription(await peer.createAnswer());
+      await waitForIceGathering(peer);
+      setLocalSignal(encodeSignal(peer.localDescription!));
+      setStatus("Answer ready");
+    } catch {
+      onMessage("Remote offer is not valid. Paste the full offer string and try again.");
+    }
   }
 
   async function acceptAnswer() {
@@ -71,8 +76,12 @@ export default function WebRtcSync({ reports, onImport, onMessage }: WebRtcSyncP
       onMessage("Start an offer before accepting an answer.");
       return;
     }
-    await peerRef.current.setRemoteDescription(decodeSignal(remoteSignal));
-    setStatus("Answer accepted");
+    try {
+      await peerRef.current.setRemoteDescription(decodeSignal(remoteSignal));
+      setStatus("Answer accepted");
+    } catch {
+      onMessage("Remote answer is not valid. Paste the full answer string and try again.");
+    }
   }
 
   function sendReports() {
@@ -116,7 +125,7 @@ export default function WebRtcSync({ reports, onImport, onMessage }: WebRtcSyncP
           type="button"
         >
           <PlugZap size={16} />
-          Accept offer
+          Make answer
         </button>
         <button
           className="ghost-button"
@@ -125,12 +134,24 @@ export default function WebRtcSync({ reports, onImport, onMessage }: WebRtcSyncP
           type="button"
         >
           <Link2 size={16} />
-          Accept answer
+          Apply answer
         </button>
-        <button className="primary-button" onClick={sendReports} type="button">
+        <button
+          className="primary-button"
+          disabled={!canSend}
+          onClick={sendReports}
+          type="button"
+        >
           <Send size={16} />
           Send
         </button>
+      </div>
+
+      <div className="import-summary">
+        <strong>Exchange order</strong>
+        <p>Device A creates an offer and copies its local signal.</p>
+        <p>Device B pastes that signal, accepts the offer, and copies back the answer.</p>
+        <p>Device A pastes the answer, accepts it, and waits for the channel to connect.</p>
       </div>
 
       <label className="field">

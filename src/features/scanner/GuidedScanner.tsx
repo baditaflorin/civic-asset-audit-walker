@@ -165,7 +165,7 @@ export default function GuidedScanner({ onDetected, onMessage }: GuidedScannerPr
         </button>
         <button className="ghost-button" onClick={() => window.print()} type="button">
           <Printer size={16} />
-          Print
+          Print tag
         </button>
       </div>
 

@@ -15,10 +15,20 @@ import {
   type AuditReport,
   type Condition
 } from "../../lib/schema";
+import {
+  applyDefaultsToDraft,
+  defaultReportDraft,
+  normalizeDraft,
+  type ReportDraft,
+  type WorkspaceSettings
+} from "../../lib/workspace";
 
 type ReportFormProps = {
   scannedTag: string;
   scannedTagId?: number;
+  draft: ReportDraft;
+  settings: WorkspaceSettings;
+  onDraftChange: (draft: ReportDraft) => void;
   onSaved: (report: AuditReport) => Promise<void>;
   onMessage: (message: string) => void;
 };
@@ -26,24 +36,55 @@ type ReportFormProps = {
 export default function ReportForm({
   scannedTag,
   scannedTagId,
+  draft,
+  settings,
+  onDraftChange,
   onSaved,
   onMessage
 }: ReportFormProps) {
-  const [assetTag, setAssetTag] = useState(scannedTag);
-  const [assetKind, setAssetKind] = useState<AssetKind>("streetlight");
-  const [condition, setCondition] = useState<Condition>("watch");
-  const [notes, setNotes] = useState("");
-  const [location, setLocation] = useState<AuditLocation | undefined>();
+  const [assetTag, setAssetTag] = useState(draft.assetTag || scannedTag);
+  const [assetKind, setAssetKind] = useState<AssetKind>(draft.assetKind);
+  const [condition, setCondition] = useState<Condition>(draft.condition);
+  const [notes, setNotes] = useState(draft.notes);
+  const [location, setLocation] = useState<AuditLocation | undefined>(draft.location);
+  const [tagId, setTagId] = useState<number | undefined>(draft.tagId ?? scannedTagId);
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     if (scannedTag) {
       setAssetTag(scannedTag);
+      setTagId(scannedTagId);
     }
-  }, [scannedTag]);
+  }, [scannedTag, scannedTagId]);
+
+  useEffect(() => {
+    const next = applyDefaultsToDraft(draft, settings);
+    setAssetTag(next.assetTag);
+    setAssetKind(next.assetKind);
+    setCondition(next.condition);
+    setNotes(next.notes);
+    setLocation(next.location);
+    setTagId(next.tagId);
+  }, [draft, settings]);
 
   const normalizedTag = useMemo(() => normalizeAssetTag(assetTag), [assetTag]);
+
+  useEffect(() => {
+    onDraftChange(
+      normalizeDraft(
+        {
+          assetTag: normalizedTag,
+          assetKind,
+          condition,
+          notes,
+          location,
+          tagId
+        },
+        settings
+      )
+    );
+  }, [assetKind, condition, location, normalizedTag, notes, onDraftChange, settings, tagId]);
 
   async function useCurrentLocation() {
     if (!navigator.geolocation) {
@@ -91,7 +132,7 @@ export default function ReportForm({
         id: crypto.randomUUID(),
         assetTag: normalizedTag,
         tagFamily: "tag36h11",
-        tagId: scannedTagId,
+        tagId,
         assetKind,
         condition,
         location,
@@ -100,7 +141,14 @@ export default function ReportForm({
         updatedAt: now,
         source: "local"
       });
-      setNotes("");
+      const resetDraft = defaultReportDraft(settings);
+      setAssetTag(resetDraft.assetTag);
+      setAssetKind(resetDraft.assetKind);
+      setCondition(resetDraft.condition);
+      setNotes(resetDraft.notes);
+      setLocation(resetDraft.location);
+      setTagId(undefined);
+      onDraftChange(resetDraft);
       onMessage(`Saved ${normalizedTag}.`);
     } finally {
       setSaving(false);

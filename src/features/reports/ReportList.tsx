@@ -1,29 +1,50 @@
-import { Download, FileDown, Trash2, Upload, X } from "lucide-react";
+import {
+  ClipboardPaste,
+  Copy,
+  Download,
+  FileDown,
+  Link2,
+  RefreshCcw,
+  Trash2,
+  Upload,
+  X
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { assetKindLabels, conditionLabels } from "../../lib/constants";
 import type { AuditReport } from "../../lib/schema";
+import {
+  buildSampleReports,
+  describeImportSourceLabel,
+  parseWorkspaceSnapshotText,
+  type WorkspaceSettings
+} from "../../lib/workspace";
 import {
   analyzeImportText,
   decodeImportFile,
   type ImportAnalysis,
   type ImportProgress
 } from "../importer/importEngine";
-import { downloadText, reportsToCsv, reportsToJson } from "./exportReports";
+import { copyText, downloadText, reportsToCsv, reportsToJson } from "./exportReports";
 
 type ReportListProps = {
   reports: AuditReport[];
+  settings: WorkspaceSettings;
   onDelete: (id: string) => Promise<void>;
   onImport: (
-    reports: AuditReport[]
+    reports: AuditReport[],
+    sourceLabel: string
   ) => Promise<{ added: number; updated: number; skipped: number }>;
+  onRestoreSnapshot: (snapshotText: string, sourceLabel: string) => Promise<void>;
   onReset: () => Promise<void>;
   onMessage: (message: string) => void;
 };
 
 export default function ReportList({
   reports,
+  settings,
   onDelete,
   onImport,
+  onRestoreSnapshot,
   onReset,
   onMessage
 }: ReportListProps) {
@@ -31,48 +52,43 @@ export default function ReportList({
   const abortRef = useRef<AbortController | null>(null);
   const [resetArmed, setResetArmed] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
   const [lastAnalysis, setLastAnalysis] = useState<ImportAnalysis | null>(null);
+  const [pasteValue, setPasteValue] = useState("");
+  const [urlValue, setUrlValue] = useState("");
 
-  async function handleImport(file: File | undefined) {
-    if (!file || importing) {
+  async function handleImportFiles(files: File[]) {
+    if (files.length === 0 || importing) {
       return;
     }
 
     const controller = new AbortController();
     abortRef.current = controller;
     setImporting(true);
-    setProgress({ phase: "reading", completed: 0, total: 1 });
 
     try {
-      if (file.size > 5 * 1024 * 1024) {
-        onMessage("Large civic file detected. Import is cancellable and will report progress.");
+      let handled = 0;
+
+      for (const file of files) {
+        controller.signal.throwIfAborted();
+        setProgress({ phase: "reading", completed: handled, total: files.length });
+        const text = await decodeImportFile(file);
+        await importTextPayload(text, file.name, "file", controller.signal);
+        handled += 1;
       }
 
-      const text = await decodeImportFile(file);
-      controller.signal.throwIfAborted();
-      const analysis = await analyzeImportText(text, {
-        filename: file.name,
-        signal: controller.signal,
-        onProgress: setProgress
-      });
-      setLastAnalysis(analysis);
-
-      if (analysis.reports.length > 0) {
-        const result = await onImport(analysis.reports);
-        onMessage(
-          `Imported ${result.added} new, updated ${result.updated}, skipped ${result.skipped}; ${analysis.issues.length} review notes.`
-        );
-      } else {
-        const first = analysis.issues[0];
-        onMessage(first ? `${first.what} ${first.nowWhat}` : "No civic asset rows were found.");
-      }
+      onMessage(
+        files.length === 1
+          ? `Imported ${describeImportSourceLabel("file")} successfully.`
+          : `Imported ${files.length} files. Review notes appear below the toolbar.`
+      );
     } catch (cause) {
       if (cause instanceof DOMException && cause.name === "AbortError") {
         onMessage("Import cancelled. Local reports were left unchanged.");
       } else {
         onMessage(
-          "Import could not be read. Choose a CSV, JSON, OSM export, 311 export, or field note."
+          "Import could not be read. Choose a CSV, JSON, workspace backup, OSM export, 311 export, or field note."
         );
       }
     } finally {
@@ -85,24 +101,161 @@ export default function ReportList({
     }
   }
 
+  async function importTextPayload(
+    text: string,
+    sourceLabel: string,
+    sourceKind: "file" | "paste" | "clipboard" | "url" | "sample",
+    signal?: AbortSignal
+  ) {
+    const workspaceSnapshot = parseWorkspaceSnapshotText(text);
+    if (workspaceSnapshot) {
+      await onRestoreSnapshot(text, sourceLabel);
+      setLastAnalysis(null);
+      return;
+    }
+
+    const analysis = await analyzeImportText(text, {
+      filename: sourceLabel,
+      sourceIdentifier: sourceLabel,
+      signal,
+      onProgress: setProgress
+    });
+    setLastAnalysis(analysis);
+
+    if (analysis.reports.length > 0) {
+      const result = await onImport(analysis.reports, sourceLabel);
+      onMessage(
+        `Imported ${result.added} new, updated ${result.updated}, skipped ${result.skipped} from ${describeImportSourceLabel(sourceKind)}; ${analysis.issues.length} review notes.`
+      );
+      return;
+    }
+
+    const first = analysis.issues[0];
+    onMessage(first ? `${first.what} ${first.nowWhat}` : "No civic asset rows were found.");
+  }
+
+  async function handlePasteImport() {
+    if (!pasteValue.trim() || importing) {
+      return;
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setImporting(true);
+
+    try {
+      await importTextPayload(pasteValue, "pasted-text", "paste", controller.signal);
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === "AbortError") {
+        onMessage("Paste import cancelled. Local reports were left unchanged.");
+      } else {
+        onMessage("Pasted text could not be imported. Check the content and try again.");
+      }
+    } finally {
+      abortRef.current = null;
+      setImporting(false);
+      setProgress(null);
+    }
+  }
+
+  async function handleClipboardImport() {
+    if (importing) {
+      return;
+    }
+
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        onMessage("Clipboard is empty. Copy JSON, CSV, or field notes first.");
+        return;
+      }
+
+      setPasteValue(text);
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setImporting(true);
+      await importTextPayload(text, "clipboard", "clipboard", controller.signal);
+    } catch {
+      onMessage("Clipboard import failed. Paste into the text box instead.");
+    } finally {
+      abortRef.current = null;
+      setImporting(false);
+      setProgress(null);
+    }
+  }
+
+  async function handleUrlImport() {
+    const url = urlValue.trim();
+    if (!url || importing) {
+      return;
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setImporting(true);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const text = await response.text();
+      await importTextPayload(text, url, "url", controller.signal);
+    } catch {
+      onMessage(
+        "URL import failed. The source may block cross-origin fetches, so use file upload or paste rendered text instead."
+      );
+    } finally {
+      abortRef.current = null;
+      setImporting(false);
+      setProgress(null);
+    }
+  }
+
+  async function handleSampleImport() {
+    if (importing) {
+      return;
+    }
+
+    const sampleReports = buildSampleReports();
+    const result = await onImport(sampleReports, "sample dataset");
+    setLastAnalysis(null);
+    onMessage(
+      `Loaded sample dataset: ${result.added} new, updated ${result.updated}, skipped ${result.skipped}.`
+    );
+  }
+
   function exportJson() {
     downloadText("civic-asset-audit-reports.json", reportsToJson(reports), "application/json");
+    onMessage("Downloaded report JSON.");
   }
 
   function exportCsv() {
     downloadText("civic-asset-audit-reports.csv", reportsToCsv(reports), "text/csv");
+    onMessage("Downloaded report CSV.");
+  }
+
+  async function copyJson() {
+    await copyText(reportsToJson(reports));
+    onMessage("Copied report JSON.");
+  }
+
+  async function copyCsv() {
+    await copyText(reportsToCsv(reports));
+    onMessage("Copied report CSV.");
   }
 
   async function handleReset() {
-    if (!resetArmed) {
+    if (settings.confirmReset && !resetArmed) {
       setResetArmed(true);
-      onMessage("Press reset again to clear local reports.");
+      onMessage("Press reset again to clear saved reports.");
       return;
     }
 
     await onReset();
     setResetArmed(false);
-    onMessage("Local reports cleared.");
+    setLastAnalysis(null);
+    onMessage("Saved reports cleared.");
   }
 
   return (
@@ -116,7 +269,7 @@ export default function ReportList({
         <button
           className="ghost-button"
           disabled={reports.length === 0}
-          onClick={exportJson}
+          onClick={() => void exportJson()}
           type="button"
         >
           <Download size={16} />
@@ -125,11 +278,29 @@ export default function ReportList({
         <button
           className="ghost-button"
           disabled={reports.length === 0}
-          onClick={exportCsv}
+          onClick={() => void exportCsv()}
           type="button"
         >
           <FileDown size={16} />
           CSV
+        </button>
+        <button
+          className="ghost-button"
+          disabled={reports.length === 0}
+          onClick={() => void copyJson()}
+          type="button"
+        >
+          <Copy size={16} />
+          Copy JSON
+        </button>
+        <button
+          className="ghost-button"
+          disabled={reports.length === 0}
+          onClick={() => void copyCsv()}
+          type="button"
+        >
+          <Copy size={16} />
+          Copy CSV
         </button>
         <button
           className="ghost-button"
@@ -138,7 +309,16 @@ export default function ReportList({
           type="button"
         >
           <Upload size={16} />
-          {importing ? "Importing" : "Import"}
+          {importing ? "Importing" : "Import files"}
+        </button>
+        <button
+          className="ghost-button"
+          disabled={importing}
+          onClick={handleSampleImport}
+          type="button"
+        >
+          <RefreshCcw size={16} />
+          Load sample
         </button>
         {importing && (
           <button
@@ -152,8 +332,8 @@ export default function ReportList({
         )}
         <button
           className="icon-button danger"
-          onClick={handleReset}
-          title="Reset local reports"
+          onClick={() => void handleReset()}
+          title="Clear saved reports"
           type="button"
         >
           <Trash2 size={16} />
@@ -161,15 +341,93 @@ export default function ReportList({
         <input
           accept="application/json,.json,.csv,text/csv,text/plain,.txt"
           hidden
-          onChange={(event) => void handleImport(event.target.files?.[0])}
+          multiple
+          onChange={(event) => void handleImportFiles(Array.from(event.target.files ?? []))}
           ref={inputRef}
           type="file"
         />
       </div>
 
+      <div
+        className={`drop-zone${dragActive ? " active" : ""}`}
+        onDragEnter={() => setDragActive(true)}
+        onDragLeave={() => setDragActive(false)}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragActive(true);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragActive(false);
+          void handleImportFiles(Array.from(event.dataTransfer.files));
+        }}
+      >
+        <strong>Drop files, paste text, or fetch a public URL.</strong>
+        <span>
+          Accepted: report JSON, CSV, TXT field notes, OSM/311 exports, and full workspace
+          backups.
+        </span>
+      </div>
+
+      <div className="field">
+        <span>Pasted text</span>
+        <textarea
+          onChange={(event) => setPasteValue(event.target.value)}
+          placeholder="Paste JSON, CSV, or field notes here."
+          rows={4}
+          value={pasteValue}
+        />
+      </div>
+
+      <div className="toolbar">
+        <button
+          className="ghost-button"
+          disabled={!pasteValue.trim() || importing}
+          onClick={() => void handlePasteImport()}
+          type="button"
+        >
+          <ClipboardPaste size={16} />
+          Import paste
+        </button>
+        <button
+          className="ghost-button"
+          disabled={importing}
+          onClick={() => void handleClipboardImport()}
+          type="button"
+        >
+          <ClipboardPaste size={16} />
+          Import clipboard
+        </button>
+      </div>
+
+      <label className="field">
+        <span>Public URL</span>
+        <input
+          onChange={(event) => setUrlValue(event.target.value)}
+          placeholder="https://example.org/export.json"
+          type="url"
+          value={urlValue}
+        />
+      </label>
+
+      <div className="toolbar">
+        <button
+          className="ghost-button"
+          disabled={!urlValue.trim() || importing}
+          onClick={() => void handleUrlImport()}
+          type="button"
+        >
+          <Link2 size={16} />
+          Import URL
+        </button>
+      </div>
+
       {progress && (
         <p className="import-progress">
-          {progress.phase} {progress.total > 1 ? `${progress.completed}/${progress.total}` : ""}
+          {progress.phase}{" "}
+          {progress.total > 1
+            ? `${Math.min(progress.completed + 1, progress.total)}/${progress.total}`
+            : ""}
         </p>
       )}
 

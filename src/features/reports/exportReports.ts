@@ -1,16 +1,5 @@
-import { auditReportSchema, type AuditReport } from "../../lib/schema";
+import type { AuditReport } from "../../lib/schema";
 import { canonicalImportExport } from "../importer/importEngine";
-
-export function parseReportImport(text: string): AuditReport[] {
-  const parsed: unknown = JSON.parse(text);
-  const reports = Array.isArray(parsed)
-    ? parsed
-    : typeof parsed === "object" && parsed !== null && "reports" in parsed
-      ? (parsed as { reports: unknown }).reports
-      : [];
-
-  return auditReportSchema.array().parse(reports);
-}
 
 export function reportsToJson(reports: AuditReport[]): string {
   return canonicalImportExport(reports);
@@ -66,6 +55,10 @@ export function downloadText(filename: string, contents: string, type: string): 
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export async function copyText(text: string): Promise<void> {
+  await navigator.clipboard.writeText(text);
 }
 
 function csvCell(value: string | number): string {

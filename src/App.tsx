@@ -9,10 +9,30 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { buildInfo } from "./lib/buildInfo";
-import { LIVE_URL, PAYPAL_URL, REPOSITORY_URL } from "./lib/constants";
+import { conditionLabels, LIVE_URL, PAYPAL_URL, REPOSITORY_URL } from "./lib/constants";
 import { ErrorBoundary } from "./lib/ErrorBoundary";
 import { type AuditReport } from "./lib/schema";
 import { useAuditReports } from "./lib/useAuditReports";
+import {
+  appendActivity,
+  buildWorkspaceSnapshot,
+  clearWorkspaceLocalState,
+  createWorkspaceShareUrl,
+  defaultReportDraft,
+  defaultWorkspaceSettings,
+  MAX_SHARE_URL_LENGTH,
+  parseWorkspaceSnapshotText,
+  parseWorkspaceShareHash,
+  readActivityHistory,
+  readReportDraft,
+  readWorkspaceSettings,
+  saveActivityHistory,
+  saveReportDraft,
+  saveWorkspaceSettings,
+  type ReportDraft,
+  type WorkspaceSettings
+} from "./lib/workspace";
+import { downloadText } from "./features/reports/exportReports";
 
 const AssetMap = lazy(() => import("./features/map/AssetMap"));
 const GuidedScanner = lazy(() => import("./features/scanner/GuidedScanner"));
@@ -20,16 +40,24 @@ const AnalyticsPanel = lazy(() => import("./features/analytics/AnalyticsPanel"))
 const WebRtcSync = lazy(() => import("./features/sync/WebRtcSync"));
 const ReportForm = lazy(() => import("./features/reports/ReportForm"));
 const ReportList = lazy(() => import("./features/reports/ReportList"));
+const WorkspacePanel = lazy(() => import("./features/workspace/WorkspacePanel"));
 
 export default function App() {
-  const { reports, status, error, upsert, remove, importReports, reset } = useAuditReports();
+  const { reports, status, error, upsert, remove, importReports, reset, replaceAll } =
+    useAuditReports();
   const [scannedTag, setScannedTag] = useState("");
   const [scannedTagId, setScannedTagId] = useState<number | undefined>();
   const [toast, setToast] = useState("Ready.");
+  const [settings, setSettings] = useState<WorkspaceSettings>(() => readWorkspaceSettings());
+  const [draft, setDraft] = useState<ReportDraft>(() =>
+    readReportDraft(readWorkspaceSettings())
+  );
+  const [activity, setActivity] = useState(() => readActivityHistory());
   const online = useOnlineStatus();
   const commitSha = buildInfo.buildCommit;
   const commitUrl = `${REPOSITORY_URL}/commit/${encodeURIComponent(commitSha)}`;
   const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+  const [sharedStateHandled, setSharedStateHandled] = useState(false);
 
   useEffect(() => {
     if (!toast) {
@@ -39,6 +67,18 @@ export default function App() {
     const timer = window.setTimeout(() => setToast(""), 4500);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    saveWorkspaceSettings(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    saveReportDraft(draft, settings);
+  }, [draft, settings]);
+
+  useEffect(() => {
+    saveActivityHistory(activity);
+  }, [activity]);
 
   const locatedCount = useMemo(
     () => reports.filter((report) => report.location).length,
@@ -50,6 +90,8 @@ export default function App() {
       commit: commitSha,
       reports: reports.length,
       located: locatedCount,
+      settings,
+      draft,
       lowConfidence: reports.filter((report) => (report.confidence?.overall ?? 1) < 0.7).length,
       sourceTypes: reports.reduce<Record<string, number>>((accumulator, report) => {
         const sourceType = report.provenance?.sourceType ?? report.source;
@@ -61,12 +103,190 @@ export default function App() {
         return accumulator;
       }, {})
     }),
-    [commitSha, locatedCount, reports]
+    [commitSha, draft, locatedCount, reports, settings]
   );
 
   async function saveReport(report: AuditReport) {
     await upsert(report);
+    setActivity((current) =>
+      appendActivity(
+        current,
+        "Report saved",
+        `${report.assetTag} · ${conditionLabels[report.condition]}`
+      )
+    );
   }
+
+  async function deleteReport(id: string) {
+    const report = reports.find((entry) => entry.id === id);
+    await remove(id);
+    if (report) {
+      setActivity((current) => appendActivity(current, "Report deleted", report.assetTag));
+    }
+  }
+
+  async function importFromSource(incoming: AuditReport[], sourceLabel: string) {
+    const result = await importReports(incoming);
+    setActivity((current) =>
+      appendActivity(
+        current,
+        "Reports imported",
+        `${result.added} new, ${result.updated} updated from ${sourceLabel}.`
+      )
+    );
+    return result;
+  }
+
+  function handleSettingsChange(next: WorkspaceSettings) {
+    setSettings(next);
+    setDraft((current) => {
+      const draftIsBlank =
+        !current.assetTag && !current.notes && !current.location && current.tagId === undefined;
+      return draftIsBlank ? defaultReportDraft(next) : current;
+    });
+  }
+
+  async function restoreWorkspaceSnapshot(snapshotText: string, sourceLabel: string) {
+    const snapshot = parseWorkspaceSnapshotText(snapshotText);
+    if (!snapshot) {
+      setToast(`Workspace restore from ${sourceLabel} failed validation.`);
+      return;
+    }
+
+    await replaceAll(snapshot.reports);
+    setSettings(snapshot.settings);
+    setDraft(snapshot.draft);
+    setActivity((current) =>
+      appendActivity(
+        snapshot.activity.length > 0 ? snapshot.activity : current,
+        "Workspace restored",
+        `Restored from ${sourceLabel}.`
+      )
+    );
+    setToast(`Workspace restored from ${sourceLabel}.`);
+  }
+
+  async function clearSavedReports() {
+    await reset();
+    setActivity((current) =>
+      appendActivity(current, "Reports cleared", "Cleared saved local reports.")
+    );
+  }
+
+  async function factoryResetWorkspace() {
+    await reset();
+    const nextSettings = defaultWorkspaceSettings();
+    const nextDraft = defaultReportDraft(nextSettings);
+    clearWorkspaceLocalState();
+    setSettings(nextSettings);
+    setDraft(nextDraft);
+    setActivity([
+      {
+        id: crypto.randomUUID(),
+        at: new Date().toISOString(),
+        action: "Workspace reset",
+        detail: "Cleared reports, draft, activity history, and restored default settings."
+      }
+    ]);
+    setToast("Workspace reset. Reports, settings, and draft were cleared.");
+  }
+
+  function downloadWorkspaceSnapshot() {
+    const snapshot = buildWorkspaceSnapshot({
+      reports,
+      settings,
+      draft,
+      activity
+    });
+    downloadText(
+      `civic-asset-audit-workspace-${buildInfo.version}.json`,
+      JSON.stringify(snapshot, null, 2),
+      "application/json"
+    );
+    setActivity((current) =>
+      appendActivity(
+        current,
+        "Workspace backed up",
+        `${snapshot.reports.length} reports saved to a workspace file.`
+      )
+    );
+    setToast("Workspace backup downloaded.");
+  }
+
+  async function shareWorkspace() {
+    const snapshot = buildWorkspaceSnapshot({
+      reports,
+      settings,
+      draft,
+      activity,
+      includeDraft: settings.includeDraftInShareLinks
+    });
+    const url = createWorkspaceShareUrl(snapshot);
+    if (url.length > MAX_SHARE_URL_LENGTH) {
+      setToast("Workspace is too large for a share link. Download a workspace backup instead.");
+      return;
+    }
+
+    await navigator.clipboard.writeText(url);
+    setActivity((current) =>
+      appendActivity(
+        current,
+        "Share link copied",
+        `${snapshot.reports.length} reports prepared for a shareable URL.`
+      )
+    );
+    setToast("Workspace share link copied.");
+  }
+
+  function printReports() {
+    setActivity((current) =>
+      appendActivity(
+        current,
+        "Printed reports",
+        `${reports.length} reports in the current workspace.`
+      )
+    );
+    window.print();
+  }
+
+  useEffect(() => {
+    if (status !== "ready" || sharedStateHandled) {
+      return;
+    }
+
+    setSharedStateHandled(true);
+    const sharedSnapshot = parseWorkspaceShareHash(window.location.hash);
+    if (!sharedSnapshot) {
+      return;
+    }
+
+    void (async () => {
+      if (reports.length === 0) {
+        await replaceAll(sharedSnapshot.reports);
+        setSettings(sharedSnapshot.settings);
+        setDraft(sharedSnapshot.draft);
+        setActivity((current) =>
+          appendActivity(
+            sharedSnapshot.activity.length > 0 ? sharedSnapshot.activity : current,
+            "Shared workspace loaded",
+            `Loaded ${sharedSnapshot.reports.length} shared reports from the URL.`
+          )
+        );
+        setToast("Shared workspace loaded from the URL.");
+        return;
+      }
+
+      const result = await importReports(sharedSnapshot.reports);
+      setActivity((current) =>
+        appendActivity(
+          current,
+          "Shared reports merged",
+          `${result.added} new, ${result.updated} updated from the URL.`
+        )
+      );
+      setToast("Shared reports were merged into the current workspace.");
+    })();
+  }, [importReports, replaceAll, reports.length, sharedStateHandled, status]);
 
   return (
     <ErrorBoundary>
@@ -134,10 +354,13 @@ export default function App() {
 
             <Suspense fallback={<PanelSkeleton label="Report" />}>
               <ReportForm
+                draft={draft}
+                onDraftChange={setDraft}
                 onMessage={setToast}
                 onSaved={saveReport}
                 scannedTag={scannedTag}
                 scannedTagId={scannedTagId}
+                settings={settings}
               />
             </Suspense>
 
@@ -146,16 +369,34 @@ export default function App() {
             </Suspense>
 
             <Suspense fallback={<PanelSkeleton label="Sync" />}>
-              <WebRtcSync onImport={importReports} onMessage={setToast} reports={reports} />
+              <WebRtcSync
+                onImport={(incoming) => importFromSource(incoming, "peer sync")}
+                onMessage={setToast}
+                reports={reports}
+              />
             </Suspense>
 
             <Suspense fallback={<PanelSkeleton label="Reports" />}>
               <ReportList
-                onDelete={remove}
-                onImport={importReports}
+                onDelete={deleteReport}
+                onImport={importFromSource}
                 onMessage={setToast}
-                onReset={reset}
+                onReset={clearSavedReports}
+                onRestoreSnapshot={restoreWorkspaceSnapshot}
                 reports={reports}
+                settings={settings}
+              />
+            </Suspense>
+
+            <Suspense fallback={<PanelSkeleton label="Workspace" />}>
+              <WorkspacePanel
+                activity={activity}
+                onDownloadSnapshot={downloadWorkspaceSnapshot}
+                onFactoryReset={factoryResetWorkspace}
+                onPrintReports={printReports}
+                onSettingsChange={handleSettingsChange}
+                onShareWorkspace={() => void shareWorkspace()}
+                settings={settings}
               />
             </Suspense>
           </div>

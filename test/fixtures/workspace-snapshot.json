@@ -1,0 +1,47 @@
+{
+  "type": "caw.workspace.v1",
+  "schemaVersion": 1,
+  "appVersion": "0.2.1",
+  "createdAt": "2026-05-09T10:30:00.000Z",
+  "settings": {
+    "defaultAssetKind": "bench",
+    "defaultCondition": "watch",
+    "rememberDraft": true,
+    "confirmReset": true,
+    "includeDraftInShareLinks": true
+  },
+  "draft": {
+    "assetTag": "CAW-36H11-000555",
+    "assetKind": "bench",
+    "condition": "watch",
+    "notes": "Pending check after lunch."
+  },
+  "reports": [
+    {
+      "schemaVersion": 1,
+      "id": "52b65be9-6b1c-4dbd-9f34-516da85c7538",
+      "assetTag": "CAW-36H11-000301",
+      "tagFamily": "tag36h11",
+      "tagId": 301,
+      "assetKind": "bench",
+      "condition": "needs_repair",
+      "location": {
+        "lat": 44.43123,
+        "lng": 26.0987,
+        "accuracy": 6
+      },
+      "notes": "Backrest slat missing on the north side.",
+      "createdAt": "2026-05-09T10:00:00.000Z",
+      "updatedAt": "2026-05-09T10:00:00.000Z",
+      "source": "import"
+    }
+  ],
+  "activity": [
+    {
+      "id": "ad4fe324-2c7a-44a2-b22f-8d7d7aaef1d0",
+      "at": "2026-05-09T10:05:00.000Z",
+      "action": "Workspace backed up",
+      "detail": "1 report saved to a workspace file."
+    }
+  ]
+}

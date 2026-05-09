@@ -56,6 +56,13 @@ export function useAuditReports() {
     setReports([]);
   }, []);
 
+  const replaceAll = useCallback(async (incoming: AuditReport[]) => {
+    const parsed = incoming.map((report) => auditReportSchema.parse(report));
+    await clearReports();
+    await saveReports(parsed);
+    setReports(parsed.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)));
+  }, []);
+
   const latestReport = useMemo(() => reports[0], [reports]);
 
   return {
@@ -67,6 +74,7 @@ export function useAuditReports() {
     upsert,
     remove,
     importReports,
-    reset
+    reset,
+    replaceAll
   };
 }

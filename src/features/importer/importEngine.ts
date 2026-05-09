@@ -1128,7 +1128,10 @@ function stableHex(input: string, length: number): string {
 
 function rememberAnalysis(cacheKey: string, analysis: ImportAnalysis): void {
   if (analysisCache.size > 10) {
-    analysisCache.delete(analysisCache.keys().next().value);
+    const oldest = analysisCache.keys().next().value;
+    if (oldest) {
+      analysisCache.delete(oldest);
+    }
   }
   analysisCache.set(cacheKey, cloneAnalysis(analysis));
 }

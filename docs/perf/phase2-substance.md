@@ -16,8 +16,9 @@ Latest local run:
 
 - 10/10 real-data fixtures passed.
 - 13 total unit/fixture tests passed.
-- Full Vitest run duration: about 1-2 seconds on the local development machine.
-- Import operations for the committed fixtures complete below the 1 second budget.
+- Full Vitest run duration: about 1-3 seconds on the local development machine.
+- Verbose real-data fixture run: median 4 ms, p95 19 ms, worst 19 ms.
+- Import operations for all committed fixtures complete below the 1 second budget.
 
 ## Hot Paths
 

@@ -63,6 +63,7 @@ type FieldInference<T> = {
 };
 
 const EPOCH = "1970-01-01T00:00:00.000Z";
+const analysisCache = new Map<string, ImportAnalysis>();
 
 export async function decodeImportFile(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -91,6 +92,12 @@ export async function analyzeImportText(
 
   const normalized = repairText(input);
   const inputBytes = new TextEncoder().encode(input).byteLength;
+  const cacheKey = stableHex(`${options.filename ?? ""}|${normalized}`, 24);
+
+  if (analysisCache.has(cacheKey)) {
+    return cloneAnalysis(analysisCache.get(cacheKey)!);
+  }
+
   if (normalized !== input && /â[]/.test(input)) {
     issues.push(
       issue(
@@ -104,7 +111,7 @@ export async function analyzeImportText(
   }
 
   if (normalized.trim().length === 0) {
-    return {
+    const analysis = {
       reports: [],
       issues: [
         issue(
@@ -117,6 +124,8 @@ export async function analyzeImportText(
       ],
       stats: emptyStats(started, inputBytes)
     };
+    rememberAnalysis(cacheKey, analysis);
+    return cloneAnalysis(analysis);
   }
 
   options.signal?.throwIfAborted();
@@ -144,7 +153,7 @@ export async function analyzeImportText(
   const deduped = dedupeReports(reports, issues);
   options.onProgress?.({ phase: "done", completed: deduped.length, total });
 
-  return {
+  const analysis = {
     reports: canonicalReports(deduped),
     issues: canonicalIssues(issues),
     stats: {
@@ -157,6 +166,8 @@ export async function analyzeImportText(
       appVersion: buildInfo.version
     }
   };
+  rememberAnalysis(cacheKey, analysis);
+  return cloneAnalysis(analysis);
 }
 
 export function canonicalImportExport(reports: AuditReport[]) {
@@ -1113,6 +1124,17 @@ function stableHex(input: string, length: number): string {
   }
 
   return output.slice(0, length);
+}
+
+function rememberAnalysis(cacheKey: string, analysis: ImportAnalysis): void {
+  if (analysisCache.size > 10) {
+    analysisCache.delete(analysisCache.keys().next().value);
+  }
+  analysisCache.set(cacheKey, cloneAnalysis(analysis));
+}
+
+function cloneAnalysis(analysis: ImportAnalysis): ImportAnalysis {
+  return JSON.parse(JSON.stringify(analysis)) as ImportAnalysis;
 }
 
 function dedupeReports(reports: AuditReport[], issues: ImportIssue[]): AuditReport[] {

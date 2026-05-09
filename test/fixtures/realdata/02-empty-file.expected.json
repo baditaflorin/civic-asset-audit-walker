@@ -1,0 +1,9 @@
+{
+  "minReports": 0,
+  "assetKinds": {},
+  "conditions": {},
+  "tags": [],
+  "issueCodes": ["empty_input"],
+  "minConfidence": 0,
+  "deterministic": true
+}

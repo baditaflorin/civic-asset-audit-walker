@@ -1,0 +1,5 @@
+@type,@id,@lat,@lon,amenity,waste,bin,name
+node,11107980400,44.4318998,26.0984806,waste_basket,trash,,
+node,11108005006,44.4318909,26.0989591,waste_basket,trash,,
+node,11108005008,44.4318713,26.0993870,waste_basket,trash,,
+

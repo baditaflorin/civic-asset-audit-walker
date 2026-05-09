@@ -1,0 +1,22 @@
+{
+  "type": "caw.export.v1",
+  "reports": [
+    {
+      "schemaVersion": 1,
+      "id": "00000000-0000-4000-8000-000000000201",
+      "assetTag": "CAW-36H11-000201",
+      "tagFamily": "tag36h11",
+      "tagId": 201,
+      "assetKind": "bench",
+      "condition": "unsafe",
+      "location": { "lat": 44.4255794, "lng": 26.1010062 },
+      "notes": "Loose metal edge.",
+      "createdAt": "2026-05-08T08:00:00.000Z",
+      "updatedAt": "2026-05-08T08:00:00.000Z",
+      "source": "local"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "00000000-0000-4000-8000-000000000202",
+      "assetTag": "CAW-36H11-000202",
+

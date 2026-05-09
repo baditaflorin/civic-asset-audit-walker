@@ -1,0 +1,47 @@
+{
+  "type": "caw.export.v1",
+  "exportedAt": "2026-05-08T09:00:00.000Z",
+  "reports": [
+    {
+      "schemaVersion": 1,
+      "id": "00000000-0000-4000-8000-000000000101",
+      "assetTag": "CAW-36H11-000101",
+      "tagFamily": "tag36h11",
+      "tagId": 101,
+      "assetKind": "bench",
+      "condition": "needs_repair",
+      "location": { "lat": 44.426991, "lng": 26.1059147, "accuracy": 12 },
+      "notes": "Broken slat near park entrance.",
+      "createdAt": "2026-05-08T08:00:00.000Z",
+      "updatedAt": "2026-05-08T08:00:00.000Z",
+      "source": "local"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "00000000-0000-4000-8000-000000000102",
+      "assetTag": "CAW-36H11-000102",
+      "tagFamily": "tag36h11",
+      "tagId": 102,
+      "assetKind": "trash_bin",
+      "condition": "good",
+      "location": { "lat": 44.4318998, "lng": 26.0984806 },
+      "notes": "",
+      "createdAt": "2026-05-08T08:05:00.000Z",
+      "updatedAt": "2026-05-08T08:05:00.000Z",
+      "source": "local"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "00000000-0000-4000-8000-000000000103",
+      "assetTag": "CAW-36H11-000103",
+      "tagFamily": "tag36h11",
+      "tagId": 103,
+      "assetKind": "streetlight",
+      "condition": "watch",
+      "notes": "Dim lamp reported by neighbor.",
+      "createdAt": "2026-05-08T08:10:00.000Z",
+      "updatedAt": "2026-05-08T08:10:00.000Z",
+      "source": "local"
+    }
+  ]
+}

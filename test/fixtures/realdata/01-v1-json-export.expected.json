@@ -1,0 +1,9 @@
+{
+  "minReports": 3,
+  "assetKinds": { "bench": 1, "trash_bin": 1, "streetlight": 1 },
+  "conditions": { "needs_repair": 1, "good": 1, "watch": 1 },
+  "tags": ["CAW-36H11-000101", "CAW-36H11-000102", "CAW-36H11-000103"],
+  "issueCodes": [],
+  "minConfidence": 0.95,
+  "deterministic": true
+}

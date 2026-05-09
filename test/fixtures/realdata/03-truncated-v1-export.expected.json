@@ -1,0 +1,9 @@
+{
+  "minReports": 1,
+  "assetKinds": { "bench": 1 },
+  "conditions": { "unsafe": 1 },
+  "tags": ["CAW-36H11-000201"],
+  "issueCodes": ["partial_json"],
+  "minConfidence": 0.9,
+  "deterministic": true
+}

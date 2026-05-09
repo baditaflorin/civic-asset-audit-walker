@@ -1,0 +1,9 @@
+{
+  "minReports": 2,
+  "assetKinds": { "bench": 2 },
+  "conditions": { "watch": 2 },
+  "tags": ["OSM-NODE-4151705106", "OSM-NODE-6777905131"],
+  "issueCodes": ["stale_check_date", "low_condition_confidence"],
+  "minConfidence": 0.72,
+  "deterministic": true
+}

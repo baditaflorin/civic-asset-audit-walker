@@ -1,0 +1,30 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API",
+  "elements": [
+    {
+      "type": "node",
+      "id": 4151705106,
+      "lat": 44.426991,
+      "lon": 26.1059147,
+      "tags": {
+        "amenity": "bench",
+        "backrest": "yes",
+        "check_date": "2021-02-10"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6777905131,
+      "lat": 44.4311563,
+      "lon": 26.0900134,
+      "tags": {
+        "amenity": "bench",
+        "armrest": "no",
+        "backrest": "yes",
+        "colour": "brown",
+        "material": "wood"
+      }
+    }
+  ]
+}

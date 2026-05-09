@@ -1,0 +1,21 @@
+[
+  {
+    "creation_date": "2018-12-18T00:00:00.000",
+    "status": "Open - Dup",
+    "service_request_number": "18-03387652",
+    "type_of_service_request": "Street Lights - All/Out",
+    "street_address": "5400 W MONTROSE AVE",
+    "zip_code": "60641",
+    "latitude": "41.96054222474566",
+    "longitude": "-87.76231575388533"
+  },
+  {
+    "creation_date": "2018-12-19T00:00:00.000",
+    "status": "Open",
+    "service_request_number": "18-03390000",
+    "type_of_service_request": "Street Lights - 1/Out",
+    "street_address": "6200 N CLARK ST",
+    "latitude": "41.9957",
+    "longitude": "-87.6702"
+  }
+]

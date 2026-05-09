@@ -1,0 +1,9 @@
+{
+  "minReports": 3,
+  "assetKinds": { "trash_bin": 3 },
+  "conditions": { "watch": 3 },
+  "tags": ["OSM-NODE-11107980400", "OSM-NODE-11108005006", "OSM-NODE-11108005008"],
+  "issueCodes": ["low_condition_confidence"],
+  "minConfidence": 0.72,
+  "deterministic": true
+}

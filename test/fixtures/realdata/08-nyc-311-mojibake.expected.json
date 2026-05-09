@@ -1,0 +1,9 @@
+{
+  "minReports": 1,
+  "assetKinds": { "streetlight": 1 },
+  "conditions": { "needs_repair": 1 },
+  "tags": ["NYC-311-57092217"],
+  "issueCodes": ["missing_location", "encoding_repaired"],
+  "minConfidence": 0.7,
+  "deterministic": true
+}

@@ -1,0 +1,9 @@
+{
+  "minReports": 2,
+  "assetKinds": { "bench": 2 },
+  "conditions": { "watch": 2 },
+  "tags": ["NYC-BENCH-260", "NYC-BENCH-44"],
+  "issueCodes": ["low_condition_confidence"],
+  "minConfidence": 0.7,
+  "deterministic": true
+}

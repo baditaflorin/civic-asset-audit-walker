@@ -1,0 +1,15 @@
+[
+  {
+    "unique_key": "57092217",
+    "created_date": "2023-03-20T10:44:00.000",
+    "closed_date": "2026-04-05T10:15:00.000",
+    "agency": "DOT",
+    "complaint_type": "Street Light Condition",
+    "descriptor": "Street Light Lamp Dim",
+    "descriptor_2": "Location Type: Highway",
+    "incident_address": "HENRY HUDSON PKWY",
+    "status": "Closed",
+    "resolution_description": "Service Request status is available on DOTâs website.",
+    "borough": "MANHATTAN"
+  }
+]

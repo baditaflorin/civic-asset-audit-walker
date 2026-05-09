@@ -1,0 +1,4 @@
+the_geom,boroname,siteid,benchid,category,benchtype,installati,address,geocodeadd,street,crossstree,latitude,longitude
+"{""type"":""Point"",""coordinates"":[-73.89716666711392,40.86236111070519]}",Bronx,1194.0,260.0,BID,backed,2012-10-22T00:00:00.000,"South side Overpass at East Fordham Rd and Grand Concourse","40°51'44.5""N 73°53'49.8""W",East Fordham Road,Grand Concourse East and West,40.8623611107,-73.8971666671
+"{""type"":""Point"",""coordinates"":[-73.9861,40.7549]}",Manhattan,2001.0,44.0,General,backless,2015-06-10T00:00:00.000,"Broadway near West 42 Street",,Broadway,West 42 Street,40.7549,-73.9861
+

@@ -1,0 +1,9 @@
+{
+  "minReports": 2,
+  "assetKinds": { "bench": 1, "trash_bin": 1 },
+  "conditions": { "needs_repair": 2 },
+  "tags": ["CAW-36H11-000042"],
+  "issueCodes": ["spreadsheet_formula_text", "generated_source_id"],
+  "minConfidence": 0.78,
+  "deterministic": true
+}

@@ -1,0 +1,9 @@
+{
+  "minReports": 12,
+  "assetKinds": { "streetlight": 12 },
+  "conditions": { "needs_repair": 12 },
+  "tags": ["CHI-311-LARGE-0001", "CHI-311-LARGE-0012"],
+  "issueCodes": [],
+  "minConfidence": 0.82,
+  "deterministic": true
+}

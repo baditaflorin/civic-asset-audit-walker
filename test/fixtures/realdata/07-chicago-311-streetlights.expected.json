@@ -1,0 +1,9 @@
+{
+  "minReports": 2,
+  "assetKinds": { "streetlight": 2 },
+  "conditions": { "needs_repair": 2 },
+  "tags": ["CHI-311-18-03387652", "CHI-311-18-03390000"],
+  "issueCodes": ["duplicate_request"],
+  "minConfidence": 0.82,
+  "deterministic": true
+}

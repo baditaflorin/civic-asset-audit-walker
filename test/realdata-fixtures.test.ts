@@ -72,6 +72,10 @@ describe("real-data import fixtures", () => {
           canonicalImportExport(second.reports)
         );
       }
+
+      if (Buffer.byteLength(input, "utf8") < 1024 * 1024) {
+        expect(first.stats.durationMs).toBeLessThan(1000);
+      }
     });
   }
 });

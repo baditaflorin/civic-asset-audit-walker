@@ -88,3 +88,24 @@ Sources consulted:
 - No global unattended aggregation network.
 - No full offline vector-map/libpostal pipeline in this substance pass; that would be a separate Mode B decision.
 - No Phase 3 polish work until the real-data pass rate and failure quality improve.
+
+## Phase 2 Implementation Update
+
+Updated: 2026-05-09
+
+Engine-level pass rate after the Phase 2 import/inference work: 10/10 fixtures pass.
+
+| #   | Input                    | Before                           | After                                                                                 |
+| --- | ------------------------ | -------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | Clean v1 JSON export     | Mostly passed, but not canonical | Imports with confidence/provenance preserved and deterministic canonical export       |
+| 2   | Empty file               | Generic failure                  | Actionable `empty_input` issue with what/why/next step                                |
+| 3   | Truncated v1 export      | All-or-nothing failure           | Salvages complete report objects and emits `partial_json`                             |
+| 4   | NYC benches              | Fails import                     | Infers bench, source IDs, coordinates, low-confidence condition                       |
+| 5   | OSM benches              | Fails import                     | Infers bench, OSM source IDs, coordinates, stale check-date warning                   |
+| 6   | OSM waste baskets        | Fails import                     | Sniffs CSV and infers trash-bin reports                                               |
+| 7   | Chicago 311 streetlights | Fails import                     | Infers streetlight, needs-repair condition, duplicate request warning                 |
+| 8   | NYC 311 mojibake         | Fails import                     | Repairs encoding, infers streetlight condition, flags missing location                |
+| 9   | Romanian volunteer CSV   | Fails import                     | Handles BOM, semicolon delimiter, Romanian labels, decimal commas, formula-like notes |
+| 10  | Larger 311 CSV sample    | Fails format boundary            | Parses repeated rows deterministically with progress-capable inference loop           |
+
+Remaining caveat: the current large fixture is a committed representative sample, not a multi-megabyte artifact. The engine has the progress/cancel path for larger files, but browser-scale testing with a true municipal export remains part of the Phase 3 candidate list.

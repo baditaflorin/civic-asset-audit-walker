@@ -16,7 +16,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "test"]
 }

@@ -20,6 +20,30 @@ export const locationSchema = z.object({
   accuracy: z.number().nonnegative().optional()
 });
 
+export const inferenceSchema = z.object({
+  score: z.number().min(0).max(1),
+  reason: z.string().min(1)
+});
+
+export const confidenceSchema = z.object({
+  overall: z.number().min(0).max(1),
+  assetTag: inferenceSchema.optional(),
+  assetKind: inferenceSchema.optional(),
+  condition: inferenceSchema.optional(),
+  location: inferenceSchema.optional()
+});
+
+export const provenanceSchema = z.object({
+  sourceType: z.string().min(1),
+  sourceId: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  rowNumber: z.number().int().positive().optional(),
+  shape: z.string().optional(),
+  fingerprint: z.string().optional(),
+  warnings: z.array(z.string()).default([]),
+  suggestions: z.array(z.string()).default([])
+});
+
 export const auditReportSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().uuid(),
@@ -32,7 +56,9 @@ export const auditReportSchema = z.object({
   notes: z.string().max(500).default(""),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  source: z.enum(["local", "peer", "import"]).default("local")
+  source: z.enum(["local", "peer", "import"]).default("local"),
+  confidence: confidenceSchema.optional(),
+  provenance: provenanceSchema.optional()
 });
 
 export const peerEnvelopeSchema = z.object({
@@ -44,6 +70,9 @@ export const peerEnvelopeSchema = z.object({
 export type AssetKind = z.infer<typeof assetKindSchema>;
 export type Condition = z.infer<typeof conditionSchema>;
 export type AuditLocation = z.infer<typeof locationSchema>;
+export type Inference = z.infer<typeof inferenceSchema>;
+export type ReportConfidence = z.infer<typeof confidenceSchema>;
+export type ReportProvenance = z.infer<typeof provenanceSchema>;
 export type AuditReport = z.infer<typeof auditReportSchema>;
 export type PeerEnvelope = z.infer<typeof peerEnvelopeSchema>;
 

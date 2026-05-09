@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
   ExternalLink,
   GitFork,
@@ -22,22 +21,14 @@ const WebRtcSync = lazy(() => import("./features/sync/WebRtcSync"));
 const ReportForm = lazy(() => import("./features/reports/ReportForm"));
 const ReportList = lazy(() => import("./features/reports/ReportList"));
 
-type GithubCommitResponse = {
-  sha: string;
-  html_url: string;
-};
-
 export default function App() {
   const { reports, status, error, upsert, remove, importReports, reset } = useAuditReports();
   const [scannedTag, setScannedTag] = useState("");
   const [scannedTagId, setScannedTagId] = useState<number | undefined>();
   const [toast, setToast] = useState("Ready.");
   const online = useOnlineStatus();
-  const commit = useGithubCommit();
-  const commitSha = commit.data?.sha.slice(0, 7) ?? buildInfo.buildCommit;
-  const commitUrl =
-    commit.data?.html_url ??
-    `${REPOSITORY_URL}/commit/${encodeURIComponent(buildInfo.buildCommit)}`;
+  const commitSha = buildInfo.buildCommit;
+  const commitUrl = `${REPOSITORY_URL}/commit/${encodeURIComponent(commitSha)}`;
   const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 
   useEffect(() => {
@@ -221,20 +212,4 @@ function useOnlineStatus() {
   }, []);
 
   return online;
-}
-
-function useGithubCommit() {
-  return useQuery({
-    queryKey: ["github-main-commit"],
-    queryFn: async (): Promise<GithubCommitResponse> => {
-      const response = await fetch(
-        "https://api.github.com/repos/baditaflorin/civic-asset-audit-walker/commits/main",
-        { headers: { Accept: "application/vnd.github+json" } }
-      );
-      if (!response.ok) {
-        throw new Error("GitHub commit lookup failed.");
-      }
-      return (await response.json()) as GithubCommitResponse;
-    }
-  });
 }

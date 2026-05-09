@@ -7,8 +7,8 @@ test("loads the Pages app and creates a demo report", async ({ page }) => {
   await expect(
     page.getByLabel("Project links", { exact: true }).getByRole("link", { name: "GitHub" })
   ).toHaveAttribute("href", "https://github.com/baditaflorin/civic-asset-audit-walker");
-  await expect(page.getByText(/v0\.2\.0/)).toBeVisible();
-  await expect(page.getByText(/commit/)).toBeVisible();
+  await expect(page.getByText(/v0\.2\.1/)).toBeVisible();
+  await expect(page.getByText(/commit [a-f0-9]{7}/)).toBeVisible();
 
   await page.getByRole("button", { name: "Use demo" }).click();
   await page.getByRole("button", { name: "Save report" }).click();

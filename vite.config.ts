@@ -1,9 +1,29 @@
+import { readFileSync } from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const repoBase = "/civic-asset-audit-walker/";
+const releaseCommit = readReleaseCommit();
+
+function readReleaseCommit() {
+  const commitFromEnv = process.env.VITE_GIT_COMMIT?.trim();
+  if (commitFromEnv) {
+    return commitFromEnv;
+  }
+
+  try {
+    const metadata = JSON.parse(readFileSync("release-metadata.json", "utf8")) as {
+      commit?: unknown;
+    };
+    return typeof metadata.commit === "string" && metadata.commit.trim()
+      ? metadata.commit.trim()
+      : "unpublished";
+  } catch {
+    return "unpublished";
+  }
+}
 
 export default defineConfig({
   base: repoBase,
@@ -56,7 +76,7 @@ export default defineConfig({
   ],
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? "0.1.0"),
-    __GIT_COMMIT__: JSON.stringify(process.env.VITE_GIT_COMMIT ?? "runtime")
+    __GIT_COMMIT__: JSON.stringify(releaseCommit)
   },
   build: {
     outDir: "docs",

@@ -38,6 +38,7 @@ export default function App() {
   const commitUrl =
     commit.data?.html_url ??
     `${REPOSITORY_URL}/commit/${encodeURIComponent(buildInfo.buildCommit)}`;
+  const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 
   useEffect(() => {
     if (!toast) {
@@ -51,6 +52,25 @@ export default function App() {
   const locatedCount = useMemo(
     () => reports.filter((report) => report.location).length,
     [reports]
+  );
+  const debugSnapshot = useMemo(
+    () => ({
+      version: buildInfo.version,
+      commit: commitSha,
+      reports: reports.length,
+      located: locatedCount,
+      lowConfidence: reports.filter((report) => (report.confidence?.overall ?? 1) < 0.7).length,
+      sourceTypes: reports.reduce<Record<string, number>>((accumulator, report) => {
+        const sourceType = report.provenance?.sourceType ?? report.source;
+        accumulator[sourceType] = (accumulator[sourceType] ?? 0) + 1;
+        return accumulator;
+      }, {}),
+      assetKinds: reports.reduce<Record<string, number>>((accumulator, report) => {
+        accumulator[report.assetKind] = (accumulator[report.assetKind] ?? 0) + 1;
+        return accumulator;
+      }, {})
+    }),
+    [commitSha, locatedCount, reports]
   );
 
   async function saveReport(report: AuditReport) {
@@ -158,6 +178,13 @@ export default function App() {
             {PAYPAL_URL}
           </a>
         </footer>
+
+        {debugEnabled && (
+          <aside className="debug-panel" aria-label="Debug state">
+            <strong>Debug</strong>
+            <pre>{JSON.stringify(debugSnapshot, null, 2)}</pre>
+          </aside>
+        )}
 
         {toast && (
           <div className="toast" role="status">

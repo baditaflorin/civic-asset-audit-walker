@@ -527,6 +527,28 @@ a {
   z-index: 1000;
 }
 
+.debug-panel {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 999;
+  max-width: min(420px, calc(100vw - 36px));
+  max-height: 45vh;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #d7d0c4;
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 16px 34px rgba(23, 33, 29, 0.18);
+  color: #17211d;
+  font-size: 0.82rem;
+}
+
+.debug-panel pre {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+
 .site-footer {
   display: flex;
   flex-wrap: wrap;

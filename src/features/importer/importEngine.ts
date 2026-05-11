@@ -1070,7 +1070,40 @@ function provenance(
 }
 
 function hasDuplicateStatus(record: Record<string, unknown>): boolean {
-  return searchable(record).includes("dup");
+  // The previous implementation checked the entire searchable() haystack
+  // (keys + values) for the substring "dup". That fired on common words
+  // like "duplex" (a NYC address kind), "duplicate-issue: false", and even
+  // on the field name `is_duplicate=false`, all of which are NOT
+  // duplicates. Constrain to actual status-bearing fields, and require
+  // the word "duplicate" as a token rather than a prefix.
+  const statusFields = [
+    "status",
+    "status_text",
+    "resolution",
+    "resolution_description",
+    "service_request_status",
+    "complaint_status",
+    "stare"
+  ];
+  const haystack = statusFields
+    .map((key) => firstString(record, [key]))
+    .filter((value): value is string => Boolean(value))
+    .join(" ")
+    .toLowerCase();
+  if (!haystack) {
+    return false;
+  }
+  // Accept "duplicate", "duplicates", and the common 311 abbreviation
+  // "dup" as standalone words. "duplex" still won't match because of \b.
+  const positive = /\bdup(?:licates?|licate)?\b/.test(haystack);
+  if (!positive) return false;
+  // Negation across one or two filler words: "not duplicate", "not a
+  // duplicate", "not the duplicate", "isn't a duplicate of".
+  const negation =
+    /\b(no|not|isn'?t|aren'?t|never|non)\b(?:\s+\w+){0,2}\s+dup(?:licates?|licate)?\b/.test(
+      haystack
+    );
+  return !negation;
 }
 
 function hasStaleCheckDate(record: Record<string, unknown>): boolean {

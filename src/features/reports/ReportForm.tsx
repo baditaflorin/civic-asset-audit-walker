@@ -22,6 +22,7 @@ import {
   type ReportDraft,
   type WorkspaceSettings
 } from "../../lib/workspace";
+import { parseManualLocation } from "./manualLocation";
 
 type ReportFormProps = {
   scannedTag: string;
@@ -50,6 +51,9 @@ export default function ReportForm({
   const [tagId, setTagId] = useState<number | undefined>(draft.tagId ?? scannedTagId);
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [manualLocationOpen, setManualLocationOpen] = useState(false);
+  const [manualLat, setManualLat] = useState("");
+  const [manualLng, setManualLng] = useState("");
 
   useEffect(() => {
     if (scannedTag) {
@@ -90,6 +94,7 @@ export default function ReportForm({
     if (!navigator.geolocation) {
       setLocation(DEFAULT_MAP_CENTER);
       onMessage("Geolocation is unavailable; using the default Bucharest map center.");
+      setManualLocationOpen(true);
       return;
     }
 
@@ -109,11 +114,42 @@ export default function ReportForm({
         accuracy: Math.round(position.coords.accuracy)
       });
       onMessage("Location attached to the report.");
-    } catch {
-      onMessage("Location was skipped. The report can still be saved.");
+    } catch (error) {
+      // Geolocation failed (permission denied, indoors with no GPS, or
+      // device location switched off). Surface the manual entry path
+      // so the volunteer can still attach coordinates from a map app
+      // or a printed plate without losing the rest of the report.
+      const isDenied =
+        error instanceof GeolocationPositionError && error.code === error.PERMISSION_DENIED;
+      onMessage(
+        isDenied
+          ? "Location permission was denied. Type coordinates manually or save without them."
+          : "Could not read GPS. Type coordinates manually or save without them."
+      );
+      setManualLocationOpen(true);
     } finally {
       setLocating(false);
     }
+  }
+
+  /**
+   * Apply manually-typed lat / lng. Validation lives in
+   * `parseManualLocation` so a unit test covers the bounds.
+   */
+  function applyManualLocation() {
+    const result = parseManualLocation(manualLat, manualLng);
+    if (result.ok === false) {
+      onMessage(
+        result.reason === "lat-out-of-range"
+          ? "Latitude must be a number between -90 and 90."
+          : "Longitude must be a number between -180 and 180."
+      );
+      return;
+    }
+    const { lat, lng } = result.location;
+    setLocation({ lat, lng });
+    setManualLocationOpen(false);
+    onMessage("Location set manually.");
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -225,12 +261,54 @@ export default function ReportForm({
           <LocateFixed size={17} />
           {locating ? "Locating" : "Use location"}
         </button>
+        <button
+          className="ghost-button"
+          onClick={() => {
+            // Seed the inputs from the current location so the user can
+            // edit a small correction rather than re-type both values.
+            if (location && !manualLocationOpen) {
+              setManualLat(location.lat.toString());
+              setManualLng(location.lng.toString());
+            }
+            setManualLocationOpen(!manualLocationOpen);
+          }}
+          type="button"
+        >
+          {manualLocationOpen ? "Hide manual" : "Type coords"}
+        </button>
         <span>
           {location
             ? `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
             : "Location optional"}
         </span>
       </div>
+      {manualLocationOpen ? (
+        <div className="field-grid">
+          <label className="field">
+            <span>Latitude</span>
+            <input
+              value={manualLat}
+              onChange={(event) => setManualLat(event.target.value)}
+              inputMode="decimal"
+              placeholder="44.4268"
+              aria-label="Latitude"
+            />
+          </label>
+          <label className="field">
+            <span>Longitude</span>
+            <input
+              value={manualLng}
+              onChange={(event) => setManualLng(event.target.value)}
+              inputMode="decimal"
+              placeholder="26.1025"
+              aria-label="Longitude"
+            />
+          </label>
+          <button className="ghost-button" onClick={applyManualLocation} type="button">
+            Apply
+          </button>
+        </div>
+      ) : null}
 
       <button className="primary-button" disabled={saving} type="submit">
         <Save size={18} />
